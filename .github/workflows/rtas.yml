@@ -1,0 +1,65 @@
+
+name: Royandi Trading Alert System
+
+on:
+  schedule:
+    - cron: "7 */4 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rtas-scheduled-scan
+  cancel-in-progress: false
+
+jobs:
+  scan:
+    name: Binance Demo 4H Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Restore GO alert history
+        uses: actions/cache/restore@v4
+        with:
+          path: rtas_state.sqlite3
+          key: rtas-state-${{ github.run_id }}
+          restore-keys: |
+            rtas-state-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run RTAS scan
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          BINANCE_FAPI_BASE: https://demo-fapi.binance.com
+          TIMEZONE: Asia/Jakarta
+          CAPITAL_USDT: "100"
+          RISK_PER_TRADE_USDT: "5"
+          MAX_TOTAL_RISK_USDT: "15"
+          LEVERAGE: "3"
+          RUN_SCAN_ON_START: "false"
+        run: |
+          python main.py --once
+
+      - name: Save GO alert history
+        if: always() && hashFiles('rtas_state.sqlite3') != ''
+        uses: actions/cache/save@v4
+        with:
+          path: rtas_state.sqlite3
+          key: rtas-state-${{ github.run_id }}
