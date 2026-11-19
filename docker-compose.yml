@@ -1,0 +1,7 @@
+services:
+  rtas:
+    build: .
+    container_name: royandi-trading-alert-system
+    restart: unless-stopped
+    env_file:
+      - .env
