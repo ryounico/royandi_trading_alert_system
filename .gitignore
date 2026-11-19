@@ -1,15 +1,21 @@
 
+# Environment and credentials
 .env
 .env.*
 !.env.example
 
+# Python
 .venv/
 venv/
 __pycache__/
 *.py[cod]
 .pytest_cache/
-.mypy_cache/
-.ruff_cache/
 
+# Local database and logs
+*.sqlite3
+*.db
 *.log
+
+# OS files
 .DS_Store
+Thumbs.db
